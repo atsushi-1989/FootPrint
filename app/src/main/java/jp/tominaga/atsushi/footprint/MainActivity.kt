@@ -1,5 +1,6 @@
 package jp.tominaga.atsushi.footprint
 
+import android.content.Intent
 import android.os.Bundle
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
@@ -15,15 +16,20 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show()
-        }
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu_main, menu)
+        menu.apply {
+            findItem(R.id.action_settings).isVisible = true  //セッティング
+            findItem(R.id.action_share).isVisible = false //シェア
+            findItem(R.id.action_comment).isVisible = false //テロップ
+            findItem(R.id.action_delete).isVisible = false //削除
+            findItem(R.id.action_edit).isVisible = false //編集
+            findItem(R.id.action_cameta).isVisible = true //カメラ
+        }
         return true
     }
 
@@ -31,9 +37,16 @@ class MainActivity : AppCompatActivity() {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        return when (item.itemId) {
-            R.id.action_settings -> true
+        when (item.itemId) {
+           R.id.action_cameta -> {
+               val intent = Intent(this@MainActivity,EditActivity::class.java).apply {
+                   putExtra(IntentKey.EDIT_MODE.name,ModeInEdit.SHOOT)
+
+               }
+               startActivity(intent)
+           }
             else -> super.onOptionsItemSelected(item)
         }
+        return true
     }
 }
