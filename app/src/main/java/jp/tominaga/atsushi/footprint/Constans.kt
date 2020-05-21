@@ -11,3 +11,6 @@ enum class IntentKey {
 
 //パーミッションの許可を求めるためのリクエストコード
 val RQ_CODE_PERMISSION = 200
+
+//撮影した写真を入れる共有フォルダ名
+val PHOTO_FOLDER_NAME = "FOOTPRINT"

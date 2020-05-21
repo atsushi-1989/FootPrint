@@ -3,8 +3,10 @@ package jp.tominaga.atsushi.footprint
 import android.Manifest
 import android.content.DialogInterface
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.util.Log
 import android.view.Menu
 import android.widget.Toast
@@ -13,8 +15,13 @@ import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 
 import kotlinx.android.synthetic.main.activity_edit.*
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.math.log
 
 class EditActivity : AppCompatActivity() {
@@ -28,6 +35,8 @@ class EditActivity : AppCompatActivity() {
     var isCameraEnabled = false
     var isWriteStorageEnabled = false
     var isLocationAccessEnabled = false
+
+    var contentUri: Uri? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,6 +76,8 @@ class EditActivity : AppCompatActivity() {
     }
 
     private fun permissionRequest() {
+
+        //ActivityCompat.sholdShowRequestPermissionRationaleはパーミッションrequestが拒否されたときにtrueになる。
 
         val isNeedExplainForCameraPermission =
             ActivityCompat.shouldShowRequestPermissionRationale(this@EditActivity,PERMISSION[0])
@@ -179,7 +190,25 @@ class EditActivity : AppCompatActivity() {
     }
 
     private fun launchCameta() {
-        Log.d("loging","パーミッションエントリー")
+
+        val contentFileName = SimpleDateFormat("yyyyMMdd_HHmmss_z").format((Date()))
+        contentUri = generateContentUriFromFileName(contentFileName)
+
+
+    }
+
+    private fun generateContentUriFromFileName(contentFileName: String): Uri? {
+        val contentFolder = File(Environment.getExternalStoragePublicDirectory(
+            Environment.DIRECTORY_PICTURES), PHOTO_FOLDER_NAME)
+        contentFolder.mkdirs()
+        val contentFilePath = contentFolder.path + "/" + contentFileName + ".jpg"
+
+        val contentFile = File(contentFilePath)
+        return FileProvider.getUriForFile(
+            this@EditActivity,
+            applicationContext.packageName + ".fileprovider",
+            contentFile
+        )
 
     }
 
