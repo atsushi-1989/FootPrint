@@ -12,6 +12,7 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
 import android.view.Menu
+import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import com.google.android.material.snackbar.Snackbar
@@ -20,6 +21,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.davemorrissey.labs.subscaleview.ImageSource
+import com.google.android.gms.location.LocationServices
 
 import kotlinx.android.synthetic.main.activity_edit.*
 import kotlinx.android.synthetic.main.content_edit.*
@@ -44,6 +46,8 @@ class EditActivity : AppCompatActivity() {
     var contentUri: Uri? = null
 
     var selectedPhotoInfo = PhotoInfoModel()
+
+    var isGetLocation = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -243,14 +247,41 @@ class EditActivity : AppCompatActivity() {
         }
 
         imageView.setImage(ImageSource.uri(contentUri!!))
-        selectedPhotoInfo.stringContentsUrl = contentUri.toString()
 
+        selectedPhotoInfo.stringContentsUrl = contentUri.toString()
         selectedPhotoInfo.dataTime = SimpleDateFormat("yyyMMdd_HHmmss_z").format(Date())
 
         //APIレベル21以下の場合に必要になる措置
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP){
             applicationContext.revokeUriPermission(contentUri,Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
         }
+
+        getLocation()
+    }
+
+    private fun getLocation() {
+
+        val client = LocationServices.getFusedLocationProviderClient(this)
+
+        try {
+            client.lastLocation.addOnSuccessListener {
+                selectedPhotoInfo.latitude = it.latitude
+                selectedPhotoInfo.longitude = it.longitude
+
+                Toast.makeText(
+                    this@EditActivity,
+                    getString(R.string.location_get) + selectedPhotoInfo.latitude.toString() + " :"
+                            + selectedPhotoInfo.longitude.toString(), Toast.LENGTH_SHORT).show()
+
+                isGetLocation = true
+            }
+
+        }catch (e:SecurityException){
+
+        }
+
+
+
     }
 
     private fun generateContentUriFromFileName(contentFileName: String): Uri? {
@@ -266,6 +297,35 @@ class EditActivity : AppCompatActivity() {
             contentFile
         )
 
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item!!.itemId){
+            R.id.action_delete -> {
+                when(mode){
+                    ModeInEdit.SHOOT -> {
+                        contentResolver.delete(Uri.parse(selectedPhotoInfo.stringContentsUrl),null,null)
+                        Toast.makeText(this@EditActivity,getString(R.string.photo_info_deleted),Toast.LENGTH_SHORT).show()
+                        finish()
+                        return true
+
+                    }
+                    ModeInEdit.EDIT -> {
+
+                    }
+
+                }
+            }
+
+            R.id.action_cameta -> {
+                inputComment.setText("")
+                if (Build.VERSION.SDK_INT >=23) permissionCheck() else launchCameta()
+
+
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+        return true
     }
 
 }
