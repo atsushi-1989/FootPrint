@@ -22,6 +22,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.davemorrissey.labs.subscaleview.ImageSource
 import com.google.android.gms.location.LocationServices
+import io.realm.Realm
 
 import kotlinx.android.synthetic.main.activity_edit.*
 import kotlinx.android.synthetic.main.content_edit.*
@@ -68,6 +69,61 @@ class EditActivity : AppCompatActivity() {
         } else {
             //Todo 編集モードでやること
         }
+
+        btnGoMap.setOnClickListener{
+            if (mode == ModeInEdit.SHOOT && !isGetLocation){
+                Toast.makeText(this@EditActivity,getString(R.string.location_not_set),Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            disPlayMap(selectedPhotoInfo.latitude,selectedPhotoInfo.longitude)
+        }
+
+        btnDone.setOnClickListener {
+            writePhotoInfoToRealm()
+        }
+
+
+    }
+
+    private fun writePhotoInfoToRealm() {
+
+        val realm = Realm.getDefaultInstance()
+        realm.beginTransaction()
+        var photoInfoRecord = PhotoInfoModel()
+
+        when (mode) {
+            ModeInEdit.SHOOT -> {
+               photoInfoRecord = realm.createObject(PhotoInfoModel::class.java)
+
+
+
+            }
+            ModeInEdit.EDIT -> {
+
+            }
+        }
+        photoInfoRecord.apply {
+            stringContentsUrl = selectedPhotoInfo.stringContentsUrl
+            dateTime = selectedPhotoInfo.dateTime
+            latitude = selectedPhotoInfo.latitude
+            longitude = selectedPhotoInfo.longitude
+            location = latitude.toString() + longitude.toString()
+            commen = inputComment.text.toString()
+        }
+        realm.commitTransaction()
+
+        inputComment.setText("")
+        Toast.makeText(this@EditActivity,getString(R.string.photo_info_written),Toast.LENGTH_SHORT).show()
+        finish()
+
+    }
+
+    private fun disPlayMap(latitude: Double, longitude: Double) {
+        val geoString = "geo:" + latitude + "," + longitude + "?z=" + ZOOM_LEVEL_DETAIL
+        val gmmIntentUri = Uri.parse(geoString)
+        val mapIntet = Intent(Intent.ACTION_VIEW,gmmIntentUri)
+        mapIntet.setPackage("com.google.android.apps.maps")
+        startActivity(mapIntet)
 
     }
 
@@ -249,7 +305,7 @@ class EditActivity : AppCompatActivity() {
         imageView.setImage(ImageSource.uri(contentUri!!))
 
         selectedPhotoInfo.stringContentsUrl = contentUri.toString()
-        selectedPhotoInfo.dataTime = SimpleDateFormat("yyyMMdd_HHmmss_z").format(Date())
+        selectedPhotoInfo.dateTime = SimpleDateFormat("yyyMMdd_HHmmss_z").format(Date())
 
         //APIレベル21以下の場合に必要になる措置
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP){

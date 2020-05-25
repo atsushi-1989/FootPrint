@@ -7,7 +7,7 @@ open class PhotoInfoModel :RealmObject() {
     //撮影した写真の画像ファイルのContentURI(アプリ間でファイル共有するための保存場所の表示形式)
     var stringContentsUrl: String = ""
     //撮影日時
-    var dataTime: String = ""
+    var dateTime: String = ""
     //経度
     var latitude: Double = 0.0
     //緯度
